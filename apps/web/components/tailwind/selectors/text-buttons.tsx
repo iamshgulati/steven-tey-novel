@@ -1,14 +1,8 @@
-import { cn } from "@/lib/utils";
-import { EditorBubbleItem, useEditor } from "novel";
-import {
-  BoldIcon,
-  ItalicIcon,
-  UnderlineIcon,
-  StrikethroughIcon,
-  CodeIcon,
-} from "lucide-react";
-import type { SelectorItem } from "./node-selector";
 import { Button } from "@/components/tailwind/ui/button";
+import { cn } from "@/lib/utils";
+import { BoldIcon, CodeIcon, ItalicIcon, StrikethroughIcon, UnderlineIcon } from "lucide-react";
+import { EditorBubbleItem, useEditor } from "novel";
+import type { SelectorItem } from "./node-selector";
 
 export const TextButtons = () => {
   const { editor } = useEditor();
@@ -47,14 +41,14 @@ export const TextButtons = () => {
   ];
   return (
     <div className="flex">
-      {items.map((item, index) => (
+      {items.map((item) => (
         <EditorBubbleItem
-          key={index}
+          key={item.name}
           onSelect={(editor) => {
             item.command(editor);
           }}
         >
-          <Button size="icon" className="rounded-none" variant="ghost">
+          <Button size="sm" className="rounded-none" variant="ghost" type="button">
             <item.icon
               className={cn("h-4 w-4", {
                 "text-blue-500": item.isActive(editor),

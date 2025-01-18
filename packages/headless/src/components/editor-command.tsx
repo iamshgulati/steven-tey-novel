@@ -1,30 +1,20 @@
-import { atom, useAtom, useSetAtom } from "jotai";
-import {
-  useEffect,
-  useRef,
-  type ComponentPropsWithoutRef,
-  forwardRef,
-  createContext,
-} from "react";
-import tunnel from "tunnel-rat";
-import { novelStore } from "./editor";
+import { useAtom, useSetAtom } from "jotai";
+import { useEffect, forwardRef, createContext } from "react";
 import { Command } from "cmdk";
+import { queryAtom, rangeAtom } from "../utils/atoms";
+import { novelStore } from "../utils/store";
+import type tunnel from "tunnel-rat";
+import type { ComponentPropsWithoutRef, FC } from "react";
 import type { Range } from "@tiptap/core";
 
-export const queryAtom = atom("");
-export const rangeAtom = atom<Range | null>(null);
+export const EditorCommandTunnelContext = createContext({} as ReturnType<typeof tunnel>);
 
-export const EditorCommandTunnelContext = createContext(
-  {} as ReturnType<typeof tunnel>
-);
+interface EditorCommandOutProps {
+  readonly query: string;
+  readonly range: Range;
+}
 
-export const EditorCommandOut = ({
-  query,
-  range,
-}: {
-  query: string;
-  range: Range;
-}): JSX.Element => {
+export const EditorCommandOut: FC<EditorCommandOutProps> = ({ query, range }) => {
   const setQuery = useSetAtom(queryAtom, { store: novelStore });
   const setRange = useSetAtom(rangeAtom, { store: novelStore });
 
@@ -49,7 +39,7 @@ export const EditorCommandOut = ({
               key: e.key,
               cancelable: true,
               bubbles: true,
-            })
+            }),
           );
 
         return false;
@@ -68,35 +58,32 @@ export const EditorCommandOut = ({
   );
 };
 
-export const EditorCommand = forwardRef<
-  HTMLDivElement,
-  ComponentPropsWithoutRef<typeof Command>
->(({ children, className, ...rest }, ref) => {
-  const commandListRef = useRef<HTMLDivElement>(null);
-  const [query, setQuery] = useAtom(queryAtom);
+export const EditorCommand = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<typeof Command>>(
+  ({ children, className, ...rest }, ref) => {
+    const [query, setQuery] = useAtom(queryAtom);
 
-  return (
-    <EditorCommandTunnelContext.Consumer>
-      {(tunnelInstance) => (
-        <tunnelInstance.In>
-          <Command
-            ref={ref}
-            onKeyDown={(e) => {
-              e.stopPropagation();
-            }}
-            id="slash-command"
-            className={className}
-            {...rest}
-          >
-            <Command.Input
-              value={query}
-              onValueChange={setQuery}
-              style={{ display: "none" }}
-            />
-            <Command.List ref={commandListRef}>{children}</Command.List>
-          </Command>
-        </tunnelInstance.In>
-      )}
-    </EditorCommandTunnelContext.Consumer>
-  );
-});
+    return (
+      <EditorCommandTunnelContext.Consumer>
+        {(tunnelInstance) => (
+          <tunnelInstance.In>
+            <Command
+              ref={ref}
+              onKeyDown={(e) => {
+                e.stopPropagation();
+              }}
+              id="slash-command"
+              className={className}
+              {...rest}
+            >
+              <Command.Input value={query} onValueChange={setQuery} style={{ display: "none" }} />
+              {children}
+            </Command>
+          </tunnelInstance.In>
+        )}
+      </EditorCommandTunnelContext.Consumer>
+    );
+  },
+);
+export const EditorCommandList = Command.List;
+
+EditorCommand.displayName = "EditorCommand";
